@@ -195,6 +195,7 @@ canvas { display: block; }
 }
 
 .result-card strong { display: block; margin-bottom: 8px; color: #fff; font-size: 25px; }
+.result-card output { display: block; margin-bottom: 10px; color: var(--lime); font: 600 20px 'IBM Plex Mono', monospace; }
 .result-card span { color: var(--muted); font-size: 13px; line-height: 1.5; }
 
 .telemetry {

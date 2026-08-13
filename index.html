@@ -161,9 +161,10 @@
           </div>
           <div class="canvas-wrap">
             <canvas id="game-canvas" aria-label="Lunar landing simulation"></canvas>
-            <div class="result-card" id="result-card" hidden>
+            <div class="result-card" id="result-card" role="status" aria-live="polite" hidden>
               <p id="result-kicker">Mission result</p>
               <strong id="result-title">Touchdown</strong>
+              <output class="result-score" id="result-score" hidden></output>
               <span id="result-detail"></span>
             </div>
           </div>
@@ -194,6 +195,7 @@
                 Land below <strong>14 m/s</strong> vertical, <strong>10 m/s</strong>
                 horizontal, and <strong>8 degrees</strong> tilt.
               </p>
+              <p>Safe landings score from 0 to 10,000 based equally on simulated time and remaining fuel.</p>
               <div class="api-key">
                 <code>state.x / y</code>
                 <code>state.vx / vy</code>

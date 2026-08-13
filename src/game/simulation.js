@@ -1,8 +1,10 @@
-import { PHYSICS, integrateLander, normalizeAngle } from './physics.js';
+import { PHYSICS, clamp, integrateLander, normalizeAngle } from './physics.js';
 import { LANDING_PAD, WORLD, isOverPad, surfaceAt } from './terrain.js';
 
 export const STEP_SECONDS = 1 / 60;
 export const LANDING_LIMITS = Object.freeze({ verticalSpeed: 14, horizontalSpeed: 10, angle: 8 });
+export const INITIAL_FUEL = 100;
+export const SCORING = Object.freeze({ maxScore: 10_000, parTimeSeconds: 120, timeWeight: 0.5, fuelWeight: 0.5 });
 
 export function initialLander() {
   return {
@@ -12,9 +14,18 @@ export function initialLander() {
     vy: -8,
     angle: 0.08,
     angularVelocity: 0,
-    fuel: 100,
+    fuel: INITIAL_FUEL,
     throttle: 0,
   };
+}
+
+export function calculateLandingScore({ elapsed, fuelRemaining, initialFuel = INITIAL_FUEL }) {
+  const timeEfficiency = clamp(1 - elapsed / SCORING.parTimeSeconds, 0, 1);
+  const fuelEfficiency = initialFuel > 0 ? clamp(fuelRemaining / initialFuel, 0, 1) : 0;
+  return Math.round(
+    SCORING.maxScore *
+      (SCORING.timeWeight * timeEfficiency + SCORING.fuelWeight * fuelEfficiency),
+  );
 }
 
 export function classifyContact(lander) {
@@ -36,6 +47,8 @@ export class Simulation {
     this.lander = initialLander();
     this.elapsed = 0;
     this.status = 'idle';
+    this.initialFuel = INITIAL_FUEL;
+    this.score = null;
     this.trajectory = [];
   }
 
@@ -76,6 +89,13 @@ export class Simulation {
     const footY = this.lander.y - PHYSICS.landerHeight / 2;
     if (footY <= surfaceAt(this.lander.x)) {
       this.status = classifyContact(this.lander);
+      if (this.status === 'landed') {
+        this.score = calculateLandingScore({
+          elapsed: this.elapsed,
+          fuelRemaining: this.lander.fuel,
+          initialFuel: this.initialFuel,
+        });
+      }
       this.lander.y = surfaceAt(this.lander.x) + PHYSICS.landerHeight / 2;
       this.lander.throttle = 0;
     } else if (this.lander.x < -30 || this.lander.x > WORLD.width + 30 || this.lander.y > WORLD.height + 100) {

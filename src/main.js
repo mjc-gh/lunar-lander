@@ -25,6 +25,7 @@ const elements = {
   resultCard: document.querySelector('#result-card'),
   resultKicker: document.querySelector('#result-kicker'),
   resultTitle: document.querySelector('#result-title'),
+  resultScore: document.querySelector('#result-score'),
   resultDetail: document.querySelector('#result-detail'),
   simTime: document.querySelector('#sim-time'),
   altitude: document.querySelector('#altitude'),
@@ -150,6 +151,8 @@ function resetMission() {
   controls = { throttle: 0, rotation: 0 };
   accumulator = 0;
   elements.resultCard.hidden = true;
+  elements.resultScore.hidden = true;
+  elements.resultScore.textContent = '';
   elements.runtimeMessage.classList.remove('error');
   elements.runtimeMessage.innerHTML = 'Return <code>{ throttle, rotation }</code> from <code>update(state)</code>.';
   setMode('idle');
@@ -190,6 +193,8 @@ function finishMission() {
   setMode(simulation.status, landed ? 'Touchdown confirmed' : simulation.status === 'lost' ? 'Signal lost' : 'Hull contact');
   elements.resultKicker.textContent = landed ? 'Mission accomplished' : 'Mission ended';
   elements.resultTitle.textContent = landed ? 'Soft landing' : simulation.status === 'lost' ? 'Lander lost' : 'Impact detected';
+  elements.resultScore.hidden = !landed;
+  elements.resultScore.textContent = landed ? `Score ${simulation.score.toLocaleString('en-US')}` : '';
   elements.resultDetail.textContent = landed
     ? `Touchdown at T+${formatTime(simulation.elapsed)} with ${simulation.lander.fuel.toFixed(0)}% fuel.`
     : 'Adjust your guidance program, reset, and fly again.';
