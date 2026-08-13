@@ -4,6 +4,7 @@ import { Simulation, STEP_SECONDS } from './game/simulation.js';
 import { CanvasRenderer } from './render/canvas-renderer.js';
 import { PlayerRuntime } from './runtime/player-runtime.js';
 import { SAMPLE_PROGRAM } from './sample-program.js';
+import { formatProgram } from './format-program.js';
 
 const PROGRAM_STORAGE_KEY = 'lander-program-v2';
 const CLOCK_STORAGE_KEY = 'lander-clock-speed';
@@ -16,6 +17,7 @@ const elements = {
   editor: document.querySelector('#code-editor'),
   lineNumbers: document.querySelector('#line-numbers'),
   run: document.querySelector('#run-button'),
+  format: document.querySelector('#format-button'),
   pause: document.querySelector('#pause-button'),
   step: document.querySelector('#step-button'),
   reset: document.querySelector('#reset-button'),
@@ -180,6 +182,25 @@ async function runProgram() {
   }
 }
 
+async function formatEditorProgram() {
+  const source = elements.editor.value;
+  elements.format.disabled = true;
+
+  try {
+    const formatted = await formatProgram(source);
+    elements.editor.value = formatted;
+    updateLineNumbers();
+    elements.runtimeMessage.classList.remove('error');
+    elements.runtimeMessage.textContent = 'Program formatted. Review it before running.';
+    elements.editor.focus();
+  } catch (error) {
+    elements.runtimeMessage.classList.add('error');
+    elements.runtimeMessage.textContent = `Formatting failed: ${error instanceof Error ? error.message : String(error)}`;
+  } finally {
+    elements.format.disabled = false;
+  }
+}
+
 function requestControls(callback) {
   runtime.request(simulation.telemetry(), (nextControls) => {
     controls = sanitizeControls(nextControls);
@@ -256,6 +277,7 @@ elements.editor.addEventListener('keydown', (event) => {
   if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') runProgram();
 });
 elements.run.addEventListener('click', runProgram);
+elements.format.addEventListener('click', formatEditorProgram);
 elements.reset.addEventListener('click', resetMission);
 elements.pause.addEventListener('click', () => {
   if (mode === 'running') setMode('paused');

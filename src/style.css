@@ -310,7 +310,7 @@ canvas { display: block; }
 
 .controls {
   display: grid;
-  grid-template-columns: minmax(0, 1.6fr) repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1.8fr) repeat(4, minmax(0, 1fr));
   gap: 7px;
   padding: 10px;
   border-top: 1px solid var(--line);
@@ -473,7 +473,12 @@ canvas { display: block; }
   .editor-wrap { grid-template-columns: 36px 1fr; }
   #code-editor { padding-right: 10px; padding-left: 8px; }
   .runtime-message { padding: 8px 10px; font-size: 9px; }
-  .controls { gap: 4px; padding: 6px; }
+  .controls {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+    padding: 6px;
+  }
+  #run-button { grid-column: span 2; }
   .button { min-height: 42px; padding: 0 5px; font-size: 8px; letter-spacing: .02em; }
   .icon-button { min-width: 0; padding: 0 4px; }
   .config-content { padding: 10px; place-items: center; }

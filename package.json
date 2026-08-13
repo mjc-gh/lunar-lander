@@ -12,5 +12,8 @@
   "devDependencies": {
     "vite": "^7.1.1",
     "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "prettier": "^3.9.6"
   }
 }
