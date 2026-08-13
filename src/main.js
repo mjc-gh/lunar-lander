@@ -10,6 +10,8 @@ const CLOCK_STORAGE_KEY = 'lander-clock-speed';
 const CLOCK_SPEEDS = [0.5, 1, 2, 4, 8];
 
 const elements = {
+  appShell: document.querySelector('.app-shell'),
+  splash: document.querySelector('#startup-splash'),
   canvas: document.querySelector('#game-canvas'),
   editor: document.querySelector('#code-editor'),
   lineNumbers: document.querySelector('#line-numbers'),
@@ -45,6 +47,18 @@ let controls = { throttle: 0, rotation: 0 };
 let previousTime = performance.now();
 let accumulator = 0;
 let clockSpeed = 1;
+let appReady = false;
+
+function markAppReady() {
+  if (appReady) return;
+  appReady = true;
+  window.clearTimeout(window.__landerLoadingWatchdog);
+  document.documentElement.classList.add('app-ready');
+  elements.appShell.removeAttribute('inert');
+  elements.appShell.removeAttribute('aria-hidden');
+  elements.splash.setAttribute('aria-hidden', 'true');
+  elements.splash.remove();
+}
 
 try {
   elements.editor.value = localStorage.getItem(PROGRAM_STORAGE_KEY) || SAMPLE_PROGRAM;
@@ -264,4 +278,5 @@ elements.tabs.forEach((tab, index) => {
 setMode('idle');
 activateTab('simulation');
 updateDisplay();
+markAppReady();
 requestAnimationFrame(frame);

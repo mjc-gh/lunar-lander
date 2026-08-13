@@ -9,9 +9,96 @@
       content="Program an autonomous lunar lander and touch down safely."
     />
     <title>Lander Lab</title>
+    <style>
+      :root {
+        background: #080c12;
+      }
+
+      html,
+      body {
+        min-width: 320px;
+        min-height: 100%;
+        margin: 0;
+        background: #080c12;
+      }
+
+      .app-shell {
+        visibility: hidden;
+      }
+
+      .startup-splash {
+        position: fixed;
+        z-index: 10;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        padding: max(24px, env(safe-area-inset-top))
+          max(24px, env(safe-area-inset-right))
+          max(24px, env(safe-area-inset-bottom))
+          max(24px, env(safe-area-inset-left));
+        color: #dce4df;
+        background: #080c12;
+        font-family: system-ui, sans-serif;
+      }
+
+      .startup-splash-content {
+        width: min(100%, 420px);
+        text-align: center;
+      }
+
+      .startup-splash-mark {
+        width: 42px;
+        height: 42px;
+        margin: 0 auto 24px;
+        border: 1px solid #75e2d7;
+        border-radius: 50%;
+        box-shadow: 0 0 0 8px rgba(117, 226, 215, .08);
+      }
+
+      .startup-splash h1 {
+        margin: 0;
+        font-size: clamp(1.6rem, 6vw, 2.2rem);
+        font-weight: 600;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+      }
+
+      .startup-splash h1 span {
+        color: #d8ff5a;
+      }
+
+      .startup-splash-status {
+        margin: 16px 0 0;
+        color: #818d8d;
+        font-size: .8rem;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+      }
+
+      html.app-ready .app-shell {
+        visibility: visible;
+      }
+
+      html.app-ready .startup-splash {
+        display: none;
+      }
+    </style>
   </head>
   <body>
-    <main class="app-shell">
+    <div class="startup-splash" id="startup-splash">
+      <div class="startup-splash-content">
+        <div class="startup-splash-mark" aria-hidden="true"></div>
+        <h1>Lander <span>Lab</span></h1>
+        <p class="startup-splash-status" id="startup-status" role="status" aria-live="polite" aria-atomic="true">
+          Initializing simulation
+        </p>
+        <noscript>
+          <p class="startup-splash-status">JavaScript is required to run the simulation. Enable it and reload.</p>
+        </noscript>
+      </div>
+    </div>
+
+    <main class="app-shell" inert aria-hidden="true">
       <header class="masthead">
         <div>
           <p class="eyebrow">Mission 01 / Mare Tranquillitatis</p>
@@ -174,6 +261,12 @@
         </div>
       </section>
     </main>
+    <script>
+      window.__landerLoadingWatchdog = window.setTimeout(() => {
+        const status = document.querySelector('#startup-status');
+        if (status) status.textContent = 'Initialization failed. Reload to try again.';
+      }, 10000);
+    </script>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
