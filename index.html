@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#080c12" />
+    <meta
+      name="description"
+      content="Program an autonomous lunar lander and touch down safely."
+    />
+    <title>Lander Lab</title>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="masthead">
+        <div>
+          <p class="eyebrow">Mission 01 / Mare Tranquillitatis</p>
+          <h1>Lander <span>Lab</span></h1>
+        </div>
+        <div class="mission-status" data-status="idle" id="mission-status">
+          <span class="status-light"></span>
+          <span id="status-text">Awaiting program</span>
+        </div>
+      </header>
+
+      <nav class="workspace-tabs" role="tablist" aria-label="Lander workspace">
+        <button
+          class="workspace-tab"
+          id="simulation-tab"
+          type="button"
+          role="tab"
+          aria-selected="true"
+          aria-controls="simulation-panel"
+          data-tab="simulation"
+        >
+          <span>01</span> Simulation
+        </button>
+        <button
+          class="workspace-tab"
+          id="program-tab"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="program-panel"
+          data-tab="program"
+          tabindex="-1"
+        >
+          <span>02</span> Program
+        </button>
+        <button
+          class="workspace-tab"
+          id="config-tab"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="config-panel"
+          data-tab="config"
+          tabindex="-1"
+        >
+          <span>03</span> Config
+        </button>
+      </nav>
+
+      <section class="workspace" aria-label="Lunar lander simulator">
+        <div
+          class="simulation-panel panel"
+          id="simulation-panel"
+          role="tabpanel"
+          aria-labelledby="simulation-tab"
+        >
+          <div class="panel-label">
+            <span>Visual telemetry</span>
+            <span><span id="clock-indicator">1&times;</span> &middot; <span id="sim-time">T+ 00:00.0</span></span>
+          </div>
+          <div class="canvas-wrap">
+            <canvas id="game-canvas" aria-label="Lunar landing simulation"></canvas>
+            <div class="result-card" id="result-card" hidden>
+              <p id="result-kicker">Mission result</p>
+              <strong id="result-title">Touchdown</strong>
+              <span id="result-detail"></span>
+            </div>
+          </div>
+          <div class="telemetry" aria-label="Flight telemetry">
+            <div><span>Altitude</span><strong id="altitude">--</strong><small>m</small></div>
+            <div><span>V-speed</span><strong id="vertical-speed">--</strong><small>m/s</small></div>
+            <div><span>H-speed</span><strong id="horizontal-speed">--</strong><small>m/s</small></div>
+            <div><span>Angle</span><strong id="angle">--</strong><small>deg</small></div>
+            <div><span>Fuel</span><strong id="fuel">--</strong><small>%</small></div>
+          </div>
+        </div>
+
+        <div
+          class="code-panel panel"
+          id="program-panel"
+          role="tabpanel"
+          aria-labelledby="program-tab"
+          hidden
+        >
+          <div class="panel-label">
+            <span>Guidance computer</span>
+            <span>JavaScript</span>
+          </div>
+          <details class="program-help">
+            <summary>Mission rules &amp; guidance API</summary>
+            <div class="program-help-content">
+              <p>
+                Land below <strong>14 m/s</strong> vertical, <strong>10 m/s</strong>
+                horizontal, and <strong>8 degrees</strong> tilt.
+              </p>
+              <div class="api-key">
+                <code>state.x / y</code>
+                <code>state.vx / vy</code>
+                <code>state.angle</code>
+                <code>state.altitude</code>
+                <code>state.pad.x</code>
+              </div>
+            </div>
+          </details>
+          <div class="editor-wrap">
+            <pre class="line-numbers" id="line-numbers" aria-hidden="true">1</pre>
+            <textarea
+              id="code-editor"
+              aria-label="Guidance program"
+              autocomplete="off"
+              autocapitalize="off"
+              spellcheck="false"
+            ></textarea>
+          </div>
+          <div class="runtime-message" id="runtime-message" role="status">
+            Return <code>{ throttle, rotation }</code> from <code>update(state)</code>.
+          </div>
+          <div class="controls">
+            <button class="button primary" id="run-button" type="button">Run program</button>
+            <button class="button" id="pause-button" type="button" disabled>Pause</button>
+            <button class="button icon-button" id="step-button" type="button" disabled title="Advance one frame">Step</button>
+            <button class="button icon-button" id="reset-button" type="button" title="Reset mission">Reset</button>
+          </div>
+        </div>
+
+        <div
+          class="config-panel panel"
+          id="config-panel"
+          role="tabpanel"
+          aria-labelledby="config-tab"
+          hidden
+        >
+          <div class="panel-label">
+            <span>Mission configuration</span>
+            <span>Local settings</span>
+          </div>
+          <div class="config-content">
+            <section class="setting-card" aria-labelledby="clock-heading">
+              <p class="eyebrow">Game clock</p>
+              <div class="setting-heading">
+                <div>
+                  <h2 id="clock-heading">Simulation rate</h2>
+                  <p>Accelerate mission time while preserving fixed-step physics.</p>
+                </div>
+                <output id="clock-rate" for="clock-half clock-normal clock-double clock-quad clock-octo">1&times; realtime</output>
+              </div>
+              <fieldset class="speed-options">
+                <legend>Choose game speed</legend>
+                <label><input id="clock-half" type="radio" name="clock-speed" value="0.5" /><span>0.5&times;</span></label>
+                <label><input id="clock-normal" type="radio" name="clock-speed" value="1" checked /><span>1&times;</span></label>
+                <label><input id="clock-double" type="radio" name="clock-speed" value="2" /><span>2&times;</span></label>
+                <label><input id="clock-quad" type="radio" name="clock-speed" value="4" /><span>4&times;</span></label>
+                <label><input id="clock-octo" type="radio" name="clock-speed" value="8" /><span>8&times;</span></label>
+              </fieldset>
+              <p class="setting-note">
+                Pause and single-step controls are unchanged. At higher rates, the guidance computer covers more simulated time between screen refreshes.
+              </p>
+            </section>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
