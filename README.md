@@ -43,13 +43,17 @@ Player code is run in a disposable worker and terminated when an update exceeds 
 
 ## Scoring
 
-Only safe landings receive a score. Scores range from 0 to 10,000 and weight simulated mission time and remaining fuel equally. With `elapsed` measured in seconds and `fuel` measured against the mission's initial fuel, the score is:
+Only safe landings receive a score. Scores range from 0 to 10,000. Simulated mission time, remaining fuel, and landing accuracy each contribute one third of the score. Accuracy measures the touchdown center's distance from `pad.x`, normalized against the maximum safe offset:
 
 ```text
-round(10,000 * (0.5 * clamp(1 - elapsed / 120, 0, 1) + 0.5 * clamp(fuel / initialFuel, 0, 1)))
+maximumSafeOffset = (pad.right - pad.left) / 2 - landerWidth / 2
+timeEfficiency = clamp(1 - elapsed / 120, 0, 1)
+fuelEfficiency = clamp(fuel / initialFuel, 0, 1)
+accuracy = clamp(1 - abs(touchdownX - pad.x) / maximumSafeOffset, 0, 1)
+round(10,000 * (timeEfficiency / 3 + fuelEfficiency / 3 + accuracy / 3))
 ```
 
-The 120-second par applies to simulated time, not wall-clock time. Pausing and changing the display clock speed do not directly change the score.
+Left and right offsets from the center score identically. The 120-second par applies to simulated time, not wall-clock time. Pausing and changing the display clock speed do not directly change the score.
 
 ## Checks
 

@@ -113,6 +113,31 @@ export class CanvasRenderer {
     context.stroke();
     context.restore();
 
+    const center = this.toScreen(LANDING_PAD.x, LANDING_PAD.y + 2);
+    const targetOffsets = [24, 12];
+    context.save();
+    context.strokeStyle = '#d8ff5a';
+    context.shadowColor = '#d8ff5a';
+    context.shadowBlur = 5;
+    context.lineCap = 'round';
+    for (const [index, offset] of targetOffsets.entries()) {
+      const targetLeft = this.toScreen(LANDING_PAD.x - offset, LANDING_PAD.y + 2);
+      const targetRight = this.toScreen(LANDING_PAD.x + offset, LANDING_PAD.y + 2);
+      context.globalAlpha = 0.55 + index * 0.2;
+      context.lineWidth = 2 + index;
+      context.beginPath();
+      context.moveTo(targetLeft.x, targetLeft.y);
+      context.lineTo(targetRight.x, targetRight.y);
+      context.stroke();
+    }
+    context.globalAlpha = 1;
+    context.lineWidth = 2;
+    context.beginPath();
+    context.moveTo(center.x, center.y - 7);
+    context.lineTo(center.x, center.y + 7);
+    context.stroke();
+    context.restore();
+
     context.fillStyle = 'rgba(216, 255, 90, .8)';
     context.font = '10px IBM Plex Mono, monospace';
     context.textAlign = 'center';

@@ -16,6 +16,14 @@ describe('contact classification', () => {
     expect(classifyContact(safeLander)).toBe('landed');
   });
 
+  it.each([LANDING_PAD.x - 48, LANDING_PAD.x + 48])('accepts the safe center edge at x=%s', (x) => {
+    expect(classifyContact({ ...safeLander, x })).toBe('landed');
+  });
+
+  it.each([LANDING_PAD.x - 49, LANDING_PAD.x + 49])('rejects a center just beyond the safe edge at x=%s', (x) => {
+    expect(classifyContact({ ...safeLander, x })).toBe('crashed');
+  });
+
   it.each([
     ['off the pad', { x: LANDING_PAD.left - 1 }],
     ['descending too quickly', { vy: -20 }],
@@ -28,29 +36,53 @@ describe('contact classification', () => {
 
 describe('Simulation', () => {
   it('awards the maximum score for an immediate landing with full fuel', () => {
-    expect(calculateLandingScore({ elapsed: 0, fuelRemaining: INITIAL_FUEL })).toBe(SCORING.maxScore);
+    expect(calculateLandingScore({ elapsed: 0, fuelRemaining: INITIAL_FUEL, touchdownX: LANDING_PAD.x }))
+      .toBe(SCORING.maxScore);
   });
 
-  it('reduces the score for more time or less fuel', () => {
-    expect(calculateLandingScore({ elapsed: 30, fuelRemaining: INITIAL_FUEL }))
-      .toBeGreaterThan(calculateLandingScore({ elapsed: 60, fuelRemaining: INITIAL_FUEL }));
-    expect(calculateLandingScore({ elapsed: 30, fuelRemaining: 80 }))
-      .toBeLessThan(calculateLandingScore({ elapsed: 30, fuelRemaining: INITIAL_FUEL }));
+  it('reduces the score as touchdown distance increases', () => {
+    expect(calculateLandingScore({ elapsed: 30, fuelRemaining: INITIAL_FUEL, touchdownX: LANDING_PAD.x }))
+      .toBeGreaterThan(calculateLandingScore({ elapsed: 30, fuelRemaining: INITIAL_FUEL, touchdownX: LANDING_PAD.x + 24 }));
+    expect(calculateLandingScore({ elapsed: 30, fuelRemaining: INITIAL_FUEL, touchdownX: LANDING_PAD.x + 24 }))
+      .toBeGreaterThan(calculateLandingScore({ elapsed: 30, fuelRemaining: INITIAL_FUEL, touchdownX: LANDING_PAD.x + 48 }));
+    expect(calculateLandingScore({ elapsed: 30, fuelRemaining: 80, touchdownX: LANDING_PAD.x }))
+      .toBeLessThan(calculateLandingScore({ elapsed: 30, fuelRemaining: INITIAL_FUEL, touchdownX: LANDING_PAD.x }));
+  });
+
+  it('scores equal left and right offsets identically', () => {
+    const options = { elapsed: 30, fuelRemaining: 80 };
+    expect(calculateLandingScore({ ...options, touchdownX: LANDING_PAD.x - 18 }))
+      .toBe(calculateLandingScore({ ...options, touchdownX: LANDING_PAD.x + 18 }));
   });
 
   it('keeps scores bounded and integral', () => {
-    expect(calculateLandingScore({ elapsed: -10, fuelRemaining: 200 })).toBe(SCORING.maxScore);
-    expect(calculateLandingScore({ elapsed: 1000, fuelRemaining: -5 })).toBe(0);
-    expect(Number.isInteger(calculateLandingScore({ elapsed: 12.345, fuelRemaining: 67.89 }))).toBe(true);
+    for (const touchdownX of [-Infinity, Infinity, NaN, -1000, 1000]) {
+      const score = calculateLandingScore({ elapsed: -10, fuelRemaining: 200, touchdownX });
+      expect(Number.isInteger(score)).toBe(true);
+      expect(score).toBeGreaterThanOrEqual(0);
+      expect(score).toBeLessThanOrEqual(SCORING.maxScore);
+    }
+    expect(calculateLandingScore({ elapsed: 1000, fuelRemaining: -5, touchdownX: LANDING_PAD.x + 48 })).toBe(0);
+    expect(Number.isInteger(calculateLandingScore({ elapsed: 12.345, fuelRemaining: 67.89, touchdownX: LANDING_PAD.x }))).toBe(true);
+  });
+
+  it('gives centered accuracy one and safe edges zero', () => {
+    const maximumSafeOffset = (LANDING_PAD.right - LANDING_PAD.left) / 2 - PHYSICS.landerWidth / 2;
+    const centered = calculateLandingScore({ elapsed: 0, fuelRemaining: INITIAL_FUEL, touchdownX: LANDING_PAD.x });
+    const leftEdge = calculateLandingScore({ elapsed: 0, fuelRemaining: INITIAL_FUEL, touchdownX: LANDING_PAD.x - maximumSafeOffset });
+    const rightEdge = calculateLandingScore({ elapsed: 0, fuelRemaining: INITIAL_FUEL, touchdownX: LANDING_PAD.x + maximumSafeOffset });
+    expect(centered).toBe(10_000);
+    expect(leftEdge).toBe(6_667);
+    expect(rightEdge).toBe(6_667);
   });
 
   it('awards a safe landing score using the final simulation step', () => {
     const simulation = new Simulation();
     simulation.lander = {
       ...simulation.lander,
-      x: LANDING_PAD.x,
+      x: LANDING_PAD.x - 1,
       y: LANDING_PAD.y + PHYSICS.landerHeight / 2 + 0.01,
-      vx: 0,
+      vx: 10,
       vy: 0,
       fuel: 80,
     };
@@ -58,9 +90,11 @@ describe('Simulation', () => {
     simulation.step({ throttle: 0, rotation: 0 }, 0.1);
 
     expect(simulation.status).toBe('landed');
+    expect(simulation.lander.x).toBe(LANDING_PAD.x);
     expect(simulation.score).toBe(calculateLandingScore({
       elapsed: 0.1,
       fuelRemaining: 80,
+      touchdownX: simulation.lander.x,
       initialFuel: INITIAL_FUEL,
     }));
   });

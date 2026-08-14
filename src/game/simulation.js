@@ -4,7 +4,13 @@ import { LANDING_PAD, WORLD, isOverPad, surfaceAt } from './terrain.js';
 export const STEP_SECONDS = 1 / 60;
 export const LANDING_LIMITS = Object.freeze({ verticalSpeed: 14, horizontalSpeed: 10, angle: 8 });
 export const INITIAL_FUEL = 100;
-export const SCORING = Object.freeze({ maxScore: 10_000, parTimeSeconds: 120, timeWeight: 0.5, fuelWeight: 0.5 });
+export const SCORING = Object.freeze({
+  maxScore: 10_000,
+  parTimeSeconds: 120,
+  timeWeight: 1 / 3,
+  fuelWeight: 1 / 3,
+  accuracyWeight: 1 / 3,
+});
 
 export function initialLander() {
   return {
@@ -19,12 +25,25 @@ export function initialLander() {
   };
 }
 
-export function calculateLandingScore({ elapsed, fuelRemaining, initialFuel = INITIAL_FUEL }) {
+export function calculateLandingScore({
+  elapsed,
+  fuelRemaining,
+  touchdownX = LANDING_PAD.x,
+  initialFuel = INITIAL_FUEL,
+}) {
   const timeEfficiency = clamp(1 - elapsed / SCORING.parTimeSeconds, 0, 1);
   const fuelEfficiency = initialFuel > 0 ? clamp(fuelRemaining / initialFuel, 0, 1) : 0;
+  const maximumSafeOffset = (LANDING_PAD.right - LANDING_PAD.left) / 2 - PHYSICS.landerWidth / 2;
+  const accuracy = clamp(
+    1 - Math.abs(touchdownX - LANDING_PAD.x) / maximumSafeOffset,
+    0,
+    1,
+  );
   return Math.round(
     SCORING.maxScore *
-      (SCORING.timeWeight * timeEfficiency + SCORING.fuelWeight * fuelEfficiency),
+      (SCORING.timeWeight * timeEfficiency +
+        SCORING.fuelWeight * fuelEfficiency +
+        SCORING.accuracyWeight * accuracy),
   );
 }
 
@@ -93,6 +112,7 @@ export class Simulation {
         this.score = calculateLandingScore({
           elapsed: this.elapsed,
           fuelRemaining: this.lander.fuel,
+          touchdownX: this.lander.x,
           initialFuel: this.initialFuel,
         });
       }
