@@ -25,7 +25,7 @@ export function initialLander() {
   };
 }
 
-export function calculateLandingScore({
+export function calculateLandingScoreBreakdown({
   elapsed,
   fuelRemaining,
   touchdownX = LANDING_PAD.x,
@@ -34,17 +34,34 @@ export function calculateLandingScore({
   const timeEfficiency = clamp(1 - elapsed / SCORING.parTimeSeconds, 0, 1);
   const fuelEfficiency = initialFuel > 0 ? clamp(fuelRemaining / initialFuel, 0, 1) : 0;
   const maximumSafeOffset = (LANDING_PAD.right - LANDING_PAD.left) / 2 - PHYSICS.landerWidth / 2;
-  const accuracy = clamp(
-    1 - Math.abs(touchdownX - LANDING_PAD.x) / maximumSafeOffset,
-    0,
-    1,
-  );
-  return Math.round(
-    SCORING.maxScore *
-      (SCORING.timeWeight * timeEfficiency +
-        SCORING.fuelWeight * fuelEfficiency +
-        SCORING.accuracyWeight * accuracy),
-  );
+  const touchdownOffset = Math.abs(touchdownX - LANDING_PAD.x);
+  const accuracyEfficiency = clamp(1 - touchdownOffset / maximumSafeOffset, 0, 1);
+  const timePoints = SCORING.maxScore * SCORING.timeWeight * timeEfficiency;
+  const fuelPoints = SCORING.maxScore * SCORING.fuelWeight * fuelEfficiency;
+  const accuracyPoints = SCORING.maxScore * SCORING.accuracyWeight * accuracyEfficiency;
+  const unroundedTotal = timePoints + fuelPoints + accuracyPoints;
+
+  return Object.freeze({
+    elapsed,
+    fuelRemaining,
+    initialFuel,
+    touchdownX,
+    padCenter: LANDING_PAD.x,
+    touchdownOffset,
+    maximumSafeOffset,
+    timeEfficiency,
+    fuelEfficiency,
+    accuracyEfficiency,
+    timePoints,
+    fuelPoints,
+    accuracyPoints,
+    unroundedTotal,
+    score: Math.round(unroundedTotal),
+  });
+}
+
+export function calculateLandingScore(options) {
+  return calculateLandingScoreBreakdown(options).score;
 }
 
 export function classifyContact(lander) {
@@ -68,6 +85,7 @@ export class Simulation {
     this.status = 'idle';
     this.initialFuel = INITIAL_FUEL;
     this.score = null;
+    this.scoreBreakdown = null;
     this.trajectory = [];
   }
 
@@ -109,12 +127,13 @@ export class Simulation {
     if (footY <= surfaceAt(this.lander.x)) {
       this.status = classifyContact(this.lander);
       if (this.status === 'landed') {
-        this.score = calculateLandingScore({
+        this.scoreBreakdown = calculateLandingScoreBreakdown({
           elapsed: this.elapsed,
           fuelRemaining: this.lander.fuel,
           touchdownX: this.lander.x,
           initialFuel: this.initialFuel,
         });
+        this.score = this.scoreBreakdown.score;
       }
       this.lander.y = surfaceAt(this.lander.x) + PHYSICS.landerHeight / 2;
       this.lander.throttle = 0;

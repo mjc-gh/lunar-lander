@@ -29,6 +29,11 @@ const elements = {
   resultTitle: document.querySelector('#result-title'),
   resultScore: document.querySelector('#result-score'),
   resultDetail: document.querySelector('#result-detail'),
+  scoreBreakdown: document.querySelector('#score-breakdown'),
+  scoreTime: document.querySelector('#score-time'),
+  scoreFuel: document.querySelector('#score-fuel'),
+  scoreAccuracy: document.querySelector('#score-accuracy'),
+  scoreTotal: document.querySelector('#score-total'),
   simTime: document.querySelector('#sim-time'),
   altitude: document.querySelector('#altitude'),
   verticalSpeed: document.querySelector('#vertical-speed'),
@@ -155,6 +160,10 @@ function resetMission() {
   elements.resultCard.hidden = true;
   elements.resultScore.hidden = true;
   elements.resultScore.textContent = '';
+  elements.scoreBreakdown.hidden = true;
+  for (const row of [elements.scoreTime, elements.scoreFuel, elements.scoreAccuracy, elements.scoreTotal]) {
+    row.textContent = '';
+  }
   elements.runtimeMessage.classList.remove('error');
   elements.runtimeMessage.innerHTML = 'Return <code>{ throttle, rotation }</code> from <code>update(state)</code>.';
   setMode('idle');
@@ -216,6 +225,15 @@ function finishMission() {
   elements.resultTitle.textContent = landed ? 'Soft landing' : simulation.status === 'lost' ? 'Lander lost' : 'Impact detected';
   elements.resultScore.hidden = !landed;
   elements.resultScore.textContent = landed ? `Score ${simulation.score.toLocaleString('en-US')}` : '';
+  elements.scoreBreakdown.hidden = !landed;
+  if (landed) {
+    const breakdown = simulation.scoreBreakdown;
+    const points = (value) => `${value.toLocaleString('en-US', { maximumFractionDigits: 6 })} pts`;
+    elements.scoreTime.textContent = points(breakdown.timePoints);
+    elements.scoreFuel.textContent = points(breakdown.fuelPoints);
+    elements.scoreAccuracy.textContent = points(breakdown.accuracyPoints);
+    elements.scoreTotal.textContent = `${breakdown.score.toLocaleString('en-US')} pts`;
+  }
   elements.resultDetail.textContent = landed
     ? `Touchdown at T+${formatTime(simulation.elapsed)} with ${simulation.lander.fuel.toFixed(0)}% fuel.`
     : 'Adjust your guidance program, reset, and fly again.';

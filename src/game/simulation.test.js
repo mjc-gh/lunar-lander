@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { PHYSICS } from './physics.js';
 import { LANDING_PAD } from './terrain.js';
-import { INITIAL_FUEL, SCORING, Simulation, calculateLandingScore, classifyContact } from './simulation.js';
+import {
+  INITIAL_FUEL,
+  SCORING,
+  Simulation,
+  calculateLandingScore,
+  calculateLandingScoreBreakdown,
+  classifyContact,
+} from './simulation.js';
 
 describe('contact classification', () => {
   const safeLander = {
@@ -76,6 +83,44 @@ describe('Simulation', () => {
     expect(rightEdge).toBe(6_667);
   });
 
+  it('exposes the complete score calculation breakdown', () => {
+    const maximumSafeOffset = 48;
+    const breakdown = calculateLandingScoreBreakdown({
+      elapsed: 30,
+      fuelRemaining: 80,
+      touchdownX: LANDING_PAD.x + 24,
+    });
+
+    expect(breakdown.maximumSafeOffset).toBe(maximumSafeOffset);
+    expect(breakdown.padCenter).toBe(LANDING_PAD.x);
+    expect(breakdown.touchdownOffset).toBe(24);
+    expect(breakdown.timeEfficiency).toBe(0.75);
+    expect(breakdown.fuelEfficiency).toBe(0.8);
+    expect(breakdown.accuracyEfficiency).toBe(0.5);
+    expect(breakdown.timePoints).toBe(2500);
+    expect(breakdown.fuelPoints).toBeCloseTo(2666.6666666667);
+    expect(breakdown.accuracyPoints).toBeCloseTo(1666.6666666667);
+    expect(breakdown.unroundedTotal).toBeCloseTo(6833.3333333333);
+    expect(breakdown.score).toBe(6833);
+    expect(calculateLandingScore({ elapsed: 30, fuelRemaining: 80, touchdownX: LANDING_PAD.x + 24 }))
+      .toBe(breakdown.score);
+  });
+
+  it('clamps every efficiency and keeps accuracy symmetric', () => {
+    const centered = calculateLandingScoreBreakdown({ elapsed: -10, fuelRemaining: 200, touchdownX: LANDING_PAD.x });
+    const outside = calculateLandingScoreBreakdown({ elapsed: 1000, fuelRemaining: -5, touchdownX: LANDING_PAD.x + 1000 });
+    const left = calculateLandingScoreBreakdown({ elapsed: 30, fuelRemaining: 80, touchdownX: LANDING_PAD.x - 18 });
+    const right = calculateLandingScoreBreakdown({ elapsed: 30, fuelRemaining: 80, touchdownX: LANDING_PAD.x + 18 });
+
+    expect(centered.timeEfficiency).toBe(1);
+    expect(centered.fuelEfficiency).toBe(1);
+    expect(centered.accuracyEfficiency).toBe(1);
+    expect(outside.timeEfficiency).toBe(0);
+    expect(outside.fuelEfficiency).toBe(0);
+    expect(outside.accuracyEfficiency).toBe(0);
+    expect(left.accuracyEfficiency).toBe(right.accuracyEfficiency);
+  });
+
   it('awards a safe landing score using the final simulation step', () => {
     const simulation = new Simulation();
     simulation.lander = {
@@ -91,6 +136,8 @@ describe('Simulation', () => {
 
     expect(simulation.status).toBe('landed');
     expect(simulation.lander.x).toBe(LANDING_PAD.x);
+    expect(simulation.scoreBreakdown.elapsed).toBe(0.1);
+    expect(simulation.scoreBreakdown.fuelRemaining).toBe(80);
     expect(simulation.score).toBe(calculateLandingScore({
       elapsed: 0.1,
       fuelRemaining: 80,
@@ -111,6 +158,7 @@ describe('Simulation', () => {
     crashed.step({ throttle: 0, rotation: 0 });
     expect(crashed.status).toBe('crashed');
     expect(crashed.score).toBeNull();
+    expect(crashed.scoreBreakdown).toBeNull();
 
     const landed = new Simulation();
     landed.lander = {
@@ -122,10 +170,12 @@ describe('Simulation', () => {
     };
     landed.step({ throttle: 0, rotation: 0 });
     const score = landed.score;
+    const breakdown = landed.scoreBreakdown;
     const elapsed = landed.elapsed;
     const fuel = landed.lander.fuel;
     landed.step({ throttle: 1, rotation: 1 });
     expect(landed.score).toBe(score);
+    expect(landed.scoreBreakdown).toBe(breakdown);
     expect(landed.elapsed).toBe(elapsed);
     expect(landed.lander.fuel).toBe(fuel);
   });
@@ -138,6 +188,7 @@ describe('Simulation', () => {
 
     expect(simulation.status).toBe('lost');
     expect(simulation.score).toBeNull();
+    expect(simulation.scoreBreakdown).toBeNull();
   });
 
   it('produces the same score for identical fixed-step flights', () => {
@@ -168,6 +219,7 @@ describe('Simulation', () => {
     expect(simulation.status).toBe('idle');
     expect(simulation.elapsed).toBe(0);
     expect(simulation.score).toBeNull();
+    expect(simulation.scoreBreakdown).toBeNull();
     expect(simulation.trajectory).toEqual([]);
   });
 });

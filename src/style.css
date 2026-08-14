@@ -177,7 +177,9 @@ canvas { display: block; }
   position: absolute;
   top: 50%;
   left: 50%;
-  width: min(340px, calc(100% - 40px));
+  width: min(570px, calc(100% - 28px));
+  max-height: calc(100% - 24px);
+  overflow: auto;
   padding: 22px;
   transform: translate(-50%, -50%);
   border: 1px solid rgba(216, 255, 90, .45);
@@ -186,7 +188,7 @@ canvas { display: block; }
   backdrop-filter: blur(10px);
 }
 
-.result-card p {
+.result-card > p {
   margin: 0 0 7px;
   color: var(--cyan);
   font: 10px 'IBM Plex Mono', monospace;
@@ -194,9 +196,18 @@ canvas { display: block; }
   text-transform: uppercase;
 }
 
-.result-card strong { display: block; margin-bottom: 8px; color: #fff; font-size: 25px; }
-.result-card output { display: block; margin-bottom: 10px; color: var(--lime); font: 600 20px 'IBM Plex Mono', monospace; }
-.result-card span { color: var(--muted); font-size: 13px; line-height: 1.5; }
+.result-card > strong { display: block; margin-bottom: 8px; color: #fff; font-size: 25px; }
+.result-card > output { display: block; margin-bottom: 10px; color: var(--acid); font: 600 20px 'IBM Plex Mono', monospace; }
+.result-card > span { color: var(--muted); font-size: 13px; line-height: 1.5; }
+
+.score-breakdown { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 13px; }
+.score-breakdown h3 { margin: 0 0 8px; color: var(--acid); font: 10px 'IBM Plex Mono', monospace; letter-spacing: .12em; text-transform: uppercase; }
+.score-breakdown dl { margin: 0; }
+.score-breakdown dl > div { display: grid; grid-template-columns: 62px minmax(0, 1fr); gap: 8px; padding: 5px 0; }
+.score-breakdown dt { color: var(--muted); font: 10px 'IBM Plex Mono', monospace; }
+.score-breakdown dd { min-width: 0; margin: 0; color: #b8c5c0; font: 10px/1.45 'IBM Plex Mono', monospace; overflow-wrap: anywhere; }
+.score-breakdown-total { margin-top: 5px; border-top: 1px solid var(--line); padding-top: 9px !important; }
+.score-breakdown-total dt, .score-breakdown-total dd { color: var(--acid); }
 
 .telemetry {
   display: grid;
@@ -466,6 +477,11 @@ canvas { display: block; }
   .telemetry span { font-size: 6px; letter-spacing: .05em; }
   .telemetry strong { font-size: 12px; }
   .telemetry small { margin-left: 2px; font-size: 5px; }
+  .result-card { width: min(570px, calc(100% - 18px)); padding: 16px; }
+  .result-card > strong { font-size: 21px; }
+  .score-breakdown { margin-top: 13px; padding-top: 10px; }
+  .score-breakdown dl > div { grid-template-columns: 52px minmax(0, 1fr); gap: 5px; }
+  .score-breakdown dd { font-size: 9px; }
   .program-help-content { display: block; padding: 0 10px 9px 24px; }
   .program-help .api-key { justify-content: flex-start; margin-top: 7px; }
   .line-numbers, #code-editor { padding-top: 12px; font-size: 11px; }
@@ -498,6 +514,8 @@ canvas { display: block; }
   .workspace-tab { min-height: 34px; }
   .panel-label { padding-top: 6px; padding-bottom: 6px; }
   .telemetry div { padding-top: 5px; padding-bottom: 5px; }
+  .result-card { max-height: calc(100% - 10px); padding-top: 14px; padding-bottom: 14px; }
+  .score-breakdown dl > div { padding: 3px 0; }
   .program-help summary { padding-top: 6px; padding-bottom: 6px; }
   .runtime-message { padding-top: 6px; padding-bottom: 6px; }
   .controls { padding: 5px; }

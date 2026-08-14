@@ -163,10 +163,19 @@
             <canvas id="game-canvas" aria-label="Lunar landing simulation"></canvas>
             <div class="result-card" id="result-card" role="status" aria-live="polite" hidden>
               <p id="result-kicker">Mission result</p>
-              <strong id="result-title">Touchdown</strong>
-              <output class="result-score" id="result-score" hidden></output>
-              <span id="result-detail"></span>
-            </div>
+               <strong id="result-title">Touchdown</strong>
+               <output class="result-score" id="result-score" hidden></output>
+               <span id="result-detail"></span>
+               <section class="score-breakdown" id="score-breakdown" aria-label="Score breakdown" hidden>
+                 <h3>Score breakdown</h3>
+                 <dl>
+                   <div><dt>Time</dt><dd id="score-time"></dd></div>
+                   <div><dt>Fuel</dt><dd id="score-fuel"></dd></div>
+                   <div><dt>Accuracy</dt><dd id="score-accuracy"></dd></div>
+                   <div class="score-breakdown-total"><dt>Total</dt><dd id="score-total"></dd></div>
+                 </dl>
+               </section>
+             </div>
           </div>
           <div class="telemetry" aria-label="Flight telemetry">
             <div><span>Altitude</span><strong id="altitude">--</strong><small>m</small></div>
